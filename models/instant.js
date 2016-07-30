@@ -8,6 +8,7 @@ var InstantSchema = new Schema({
     speed           : Number,
     distance        : Number,
     timestamp       : Date,
+    mod             : Number,
     acceleration    : Number,
     game            : ObjectId
 });

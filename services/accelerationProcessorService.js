@@ -21,7 +21,7 @@ var avg = function(array) {
   }
   var sum = 0;
   array.forEach(function(each, i) {
-    sum += each.acceleration;
+    sum += each;
   })
   return sum / array.length;
 }
@@ -30,7 +30,7 @@ var lastDeviation = function(array) {
   var average = avg(array);
   var sum = 0;
   array.forEach(function(a) {
-    sum += Math.pow(a.acceleration - average, 2);
+    sum += Math.pow(a - average, 2);
   });
   return Math.sqrt(sum / (array.length - 1));
 }
@@ -48,7 +48,7 @@ exports.onEvent = function(event) {
   if (!game) {
     game = exports.startGame("Game started at: " + event.timestamp);
   }
-  Instant.find({game: game.id}).sort('-date').exec(function(err, instants) {
+  Instant.find({game: game._id}).sort('-date').exec(function(err, instants) {
     var lastAvg = lastEvent = lastDistance = previousSpeed = 0;
     var lastAcc = [];
 
@@ -58,25 +58,32 @@ exports.onEvent = function(event) {
       lastAcc = instants.slice(instants.length - WINDOW);
       lastDistance = lastInstant.distance;
       previousSpeed = lastInstant.speed;
+      console.log('aca ' + lastInstant)
     } else {
       var instant = new Instant();
 
       instant.distance = 0;
-      instant.game = game.id;
+      instant.game = game._id;
       instant.speed = 0;
-      instant.acceleration = event.mod;
+      instant.acceleration = 0;
+      instant.mod = event.mod;
       instant.timestamp = event.timestamp;
       instant.save();
 
-      wss.broadcast(JSON.stringify(instant));
+      wss.broadcast(JSON.stringify(JSON.stringify({
+        timestamp: instant.timestamp.getTime(),
+        mod: instant.mod,
+        speed: instant.speed
+      })));
 
       return;
     }
 
-    var diff = (event.timestamp - lastEvent) / 1000;
-    var lastAvg = avg(lastAcc);
+    console.log(lastEvent);
+    var diff = (event.timestamp - lastEvent.getTime()) / 1000;
+    var lastAvg = avg(lastAcc.map(function(a) { return a.mod }));
     var acceleration = lastAvg * 9.81;
-    var deviation = lastDeviation(lastAcc);
+    var deviation = lastDeviation(lastAcc.map(function(a) { return a.mod }));
 
     if (deviation < 0.04 && event.mod) {
       acceleration = 0;
@@ -87,21 +94,27 @@ exports.onEvent = function(event) {
     }
 
     var newSpeed = previousSpeed + diff * acceleration;
-    var newDistance = lastDistance + diff * newSpeed;
-
+    
     if (newSpeed < 0) {
       newSpeed = 0;
     }
 
+    var newDistance = lastDistance + diff * newSpeed;
+
     var instant = new Instant();
 
     instant.distance = newDistance;
-    instant.game = game.id;
+    instant.game = game._id;
     instant.speed = newSpeed;
     instant.acceleration = acceleration;
+    instant.mod = event.mod;
     instant.timestamp = event.timestamp;
     instant.save();
 
-    wss.broadcast(JSON.stringify(instant));
+    wss.broadcast(JSON.stringify({
+      timestamp: instant.timestamp.getTime(),
+      mod: instant.mod,
+      speed: instant.speed
+    }));
   });
 }

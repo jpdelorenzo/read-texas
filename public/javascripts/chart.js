@@ -22,8 +22,8 @@ $(document).ready(function() {
 
   var exampleSocket = new WebSocket("ws://localhost:8080");
   exampleSocket.onmessage = function (event) {
-    console.log(event);
     var data = JSON.parse(event.data);
+      console.log(event.data);
     chartData[0].values.push({ x: data.timestamp, y: data.deviation });
     chartData[1].values.push({ x: data.timestamp, y: data.mod });
     chartData[2].values.push({ x: data.timestamp, y: data.speed });
