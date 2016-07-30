@@ -9,10 +9,22 @@ wss.broadcast = function broadcast(data) {
   });
 };
 
-var speed, kms, lastEvent;
+var speed, kms, lastEvent, lastAcc, prevLastAvg;
+
+var avg = function(array) {
+  if (array.length == 0) {
+    return 0;
+  }
+  var sum = 0;
+  array.forEach(function(each, i) {
+    sum += each;
+  })
+  return sum / array.length;
+}
 
 exports.startGame = function() {
-  speed = kms = lastEvent = 0;
+  speed = kms = lastEvent = prevLastAvg = 0;
+  lastAcc = [];
 }
 
 exports.onEvent = function(event) {
@@ -20,23 +32,37 @@ exports.onEvent = function(event) {
     exports.startGame()
   }
   if (lastEvent == 0) {
-    lastEvent = event.timestamp
+    lastEvent = event.timestamp;
+    return
+  }
+  lastAcc.push(event.mod);
+
+  if (lastAcc.length > 10) {
+    lastAcc.shift();
+  }
+
+  if (lastAcc.length < 10) {
+    return;
   }
 
   var diff = (event.timestamp - lastEvent) / 1000;
-  console.log('Diff: ' + diff);
-  var acceleration = event.mod * 9.81;
+
+  var lastAvg = avg(lastAcc);
+
+  var acceleration = lastAvg * 9.81;
+
   if (acceleration > 0) {
     acceleration *= DEFAULT_ACCELERATION;
   } else if (acceleration == 0) {
     acceleration = -0.5;
   }
-  console.log('Acc: ' + acceleration);
+
   speed += diff * acceleration
 
   if (speed < 0) {
     speed = 0;
   }
+  console.log({diff: diff, acceleration: acceleration, lastAvg: lastAvg, speed: speed})
 
   var data = event;
   data.speed = speed;

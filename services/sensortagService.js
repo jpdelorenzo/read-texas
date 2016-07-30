@@ -26,6 +26,7 @@ exports.readTag = function() {
 
     function notifyMe() {
        tag.notifyAccelerometer(listenForAcc);   	// start the accelerometer listener
+       tag.setAccelerometerPeriod(100, function(error) { console.log(error) });
       //  tag.notifySimpleKey(listenForButton);		// start the button listener
      }
 
