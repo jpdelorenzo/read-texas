@@ -6,7 +6,7 @@ var Game = require('../models/game').Game;
 var Instant = require('../models/instant').Instant;
 
 var DEFAULT_ACCELERATION = 0.75;
-var WIND_ACCELERATION = 5;
+var WIND_ACCELERATION = 1;
 var WINDOW = 15;
 var game;
 
@@ -98,14 +98,15 @@ exports.onEvent = function(event) {
         acceleration = lastAvg * 9.81;
 
         if (deviation < 0.04 && event.mod) {
-          acceleration = 0;
-        } else if (acceleration > 0) {
-          acceleration *= DEFAULT_ACCELERATION;
-        } else if (acceleration <= 0.05) {
-          acceleration = -0.5;
+          acceleration = -2;
+        } else {
+          if (acceleration > 0) {
+            acceleration *= DEFAULT_ACCELERATION;
+          } else if (acceleration = 0) {
+            acceleration = -0.5;
+          }
+          acceleration -= WIND_ACCELERATION;
         }
-
-        acceleration -= WIND_ACCELERATION;
 
         speed += diff * acceleration;
         speed = speed < 0 ? 0 : speed;
