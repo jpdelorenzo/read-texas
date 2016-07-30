@@ -4,12 +4,12 @@ var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 
 var InstantSchema = new Schema({
-    id              : ObjectId,
     speed           : Number,
     distance        : Number,
     timestamp       : Date,
     mod             : Number,
     acceleration    : Number,
+    time            : Number,
     game            : ObjectId
 });
 
