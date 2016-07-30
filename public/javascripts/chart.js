@@ -4,14 +4,8 @@ $(document).ready(function() {
       values: [],
       type: 'line',
       yAxis: 1,
-      key: 'X ',
+      key: 'Deviation ',
       color: '#ff7f0e'
-  }, {
-      values: [],
-      type: 'line',
-      yAxis: 1,
-      key: 'Z',
-      color: '#Aca02c'
   }, {
       values: [],
       type: 'line',
@@ -30,15 +24,13 @@ $(document).ready(function() {
   exampleSocket.onmessage = function (event) {
     console.log(event);
     var data = JSON.parse(event.data);
-    chartData[0].values.push({ x: data.timestamp, y: data.x });
-    chartData[1].values.push({ x: data.timestamp, y: data.z });
-    chartData[2].values.push({ x: data.timestamp, y: data.mod });
-    chartData[3].values.push({ x: data.timestamp, y: data.speed });
-    if (chartData[0].values.length > 50) {
-      chartData[0].values = chartData[0].values.slice(chartData[0].values.length - 50);
-      chartData[1].values = chartData[1].values.slice(chartData[1].values.length - 50);
-      chartData[2].values = chartData[2].values.slice(chartData[2].values.length - 50);
-      chartData[3].values = chartData[3].values.slice(chartData[3].values.length - 50);
+    chartData[0].values.push({ x: data.timestamp, y: data.deviation });
+    chartData[1].values.push({ x: data.timestamp, y: data.mod });
+    chartData[2].values.push({ x: data.timestamp, y: data.speed });
+    if (chartData[0].values.length > 120) {
+      chartData[0].values = chartData[0].values.slice(chartData[0].values.length - 120);
+      chartData[1].values = chartData[1].values.slice(chartData[1].values.length - 120);
+      chartData[2].values = chartData[2].values.slice(chartData[2].values.length - 120);
     }
     d3.select('#chart svg')
         .datum(chartData)
