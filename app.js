@@ -10,6 +10,10 @@ var users = require('./routes/users');
 
 var app = express();
 
+app.use('/nvd3', express.static(__dirname + '/node_modules/nvd3/build/'));
+
+require('./services/sensortagService').readTag()
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

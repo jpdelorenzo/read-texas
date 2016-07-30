@@ -3,3 +3,9 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
+
+    
+  #chart(height='600px')
+    svg
+    
+  script(src='/javascripts/chart.js', charset='utf-8')
