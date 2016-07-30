@@ -3,7 +3,6 @@ var wss             = new WebSocketServer({ port: 8080 });
 
 var DEFAULT_ACCELERATION = 0.75;
 var WINDOW = 15;
-var lastAccAvg = 0;
 
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
@@ -57,21 +56,10 @@ exports.onEvent = function(event) {
   }
 
   var diff = (event.timestamp - lastEvent) / 1000;
-
   var lastAvg = avg(lastAcc);
-
-  if (event.mod - lastAccAvg < 0) {
-    acceleration = lastAccAvg - acceleration;
-  }
-
   var acceleration = lastAvg * 9.81;
-
   var deviation = lastDeviation(lastAcc);
 
-  if(lastAvg - lastAccAvg < 0) {
-    acceleration = - 0.5;
-  }
-  lastAccAvg = lastAvg;
   if (deviation < 0.04 && event.mod) {
     acceleration = 0;
   } else if (acceleration > 0) {
