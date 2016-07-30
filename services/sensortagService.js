@@ -1,14 +1,7 @@
 
 var SensorTag = require('sensortag');		// sensortag library
 
-var WebSocketServer = require('ws').Server
-var wss             = new WebSocketServer({ port: 8080 });
-
-wss.broadcast = function broadcast(data) {
-  wss.clients.forEach(function each(client) {
-    client.send(data);
-  });
-};
+var accelerationService = require('./accelerationProcessorService');
 
 exports.readTag = function() {
 
@@ -33,35 +26,38 @@ exports.readTag = function() {
 
     function notifyMe() {
        tag.notifyAccelerometer(listenForAcc);   	// start the accelerometer listener
-      tag.notifySimpleKey(listenForButton);		// start the button listener
+      //  tag.notifySimpleKey(listenForButton);		// start the button listener
      }
 
      // When you get an accelermeter change, print it out:
     function listenForAcc() {
       tag.on('accelerometerChange', function(x, y, z) {
         z = z - 4
+        x = (x/4).toFixed(1);
+        y = (y/4).toFixed(1);
+        z = (z/4).toFixed(1);
         var mod = Math.sqrt(Math.pow(z, 2) + Math.pow(x, 2));
-        var data = { timestamp: new Date().getTime(), x: x/4, y: y/4, z: z/4, mod: mod/4 }
-        console.log(JSON.stringify(data))
-        wss.broadcast(JSON.stringify(data));
+        var data = { timestamp: new Date().getTime(), x: x, y: y, z: z, mod: mod/4 }
+        // console.log(JSON.stringify(data));
+        accelerationService.onEvent(data);
       });
     }
 
-    // when you get a button change, print it out:
-    function listenForButton() {
-      tag.on('simpleKeyChange', function(left, right) {
-        if (left) {
-          console.log('left: ' + left);
-        }
-        if (right) {
-          console.log('right: ' + right);
-        }
-        // if both buttons are pressed, disconnect:
-        if (left && right) {
-          tag.disconnect();
-        }
-       });
-    }
+    // // when you get a button change, print it out:
+    // function listenForButton() {
+    //   tag.on('simpleKeyChange', function(left, right) {
+    //     if (left) {
+    //       console.log('left: ' + left);
+    //     }
+    //     if (right) {
+    //       console.log('right: ' + right);
+    //     }
+    //     // if both buttons are pressed, disconnect:
+    //     if (left && right) {
+    //       tag.disconnect();
+    //     }
+    //    });
+    // }
 
     // Now that you've defined all the functions, start the process:
     connectAndSetUpMe();
