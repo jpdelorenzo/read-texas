@@ -1,4 +1,3 @@
-
 var SensorTag = require('sensortag');		// sensortag library
 
 var accelerationService = require('./accelerationProcessorService');

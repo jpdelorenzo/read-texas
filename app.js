@@ -7,12 +7,14 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var games = require('./routes/games');
 
 var app = express();
 
 app.use('/nvd3', express.static(__dirname + '/node_modules/nvd3/build/'));
 
-require('./services/sensortagService').readTag()
+require('mongoose').connect('mongodb://localhost/hackathon');
+require('./services/sensortagService').readTag();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -28,6 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/games', games);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
