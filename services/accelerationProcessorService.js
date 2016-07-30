@@ -44,6 +44,27 @@ exports.startGame = function(name) {
   return game.save();
 }
 
+var toDashboardJson = function (timestamp, mod, speed) {
+  return JSON.stringify({
+    timestamp: timestamp,
+    mod: mod,
+    speed: speed
+  });
+}
+
+var createInstant = function(distance, game, speed, acceleration, mod, timestamp) {
+  var instant = new Instant();
+
+  instant.distance = distance;
+  instant.game = game;
+  instant.speed = speed;
+  instant.acceleration = acceleration;
+  instant.mod = mod;
+  instant.timestamp = timestamp;
+
+  return instant;
+}
+
 exports.onEvent = function(event) {
   if (!game) {
     game = exports.startGame("Game started at: " + event.timestamp);
@@ -58,28 +79,14 @@ exports.onEvent = function(event) {
       lastAcc = instants.slice(instants.length - WINDOW);
       lastDistance = lastInstant.distance;
       previousSpeed = lastInstant.speed;
-      console.log('aca ' + lastInstant)
     } else {
-      var instant = new Instant();
-
-      instant.distance = 0;
-      instant.game = game._id;
-      instant.speed = 0;
-      instant.acceleration = 0;
-      instant.mod = event.mod;
-      instant.timestamp = event.timestamp;
+      var instant = createInstant(0, game._id, 0, 0, event.mod, event.timestamp);
       instant.save();
 
-      wss.broadcast(JSON.stringify(JSON.stringify({
-        timestamp: instant.timestamp.getTime(),
-        mod: instant.mod,
-        speed: instant.speed
-      })));
-
+      wss.broadcast(toDashboardJson(instant.timestamp.getTime(), instant.mod, instant.speed));
       return;
     }
 
-    console.log(lastEvent);
     var diff = (event.timestamp - lastEvent.getTime()) / 1000;
     var lastAvg = avg(lastAcc.map(function(a) { return a.mod }));
     var acceleration = lastAvg * 9.81;
@@ -94,27 +101,12 @@ exports.onEvent = function(event) {
     }
 
     var newSpeed = previousSpeed + diff * acceleration;
-    
-    if (newSpeed < 0) {
-      newSpeed = 0;
-    }
-
+    newSpeed = newSpeed < 0 ? 0 : newSpeed;
     var newDistance = lastDistance + diff * newSpeed;
 
-    var instant = new Instant();
-
-    instant.distance = newDistance;
-    instant.game = game._id;
-    instant.speed = newSpeed;
-    instant.acceleration = acceleration;
-    instant.mod = event.mod;
-    instant.timestamp = event.timestamp;
+    var instant = createInstant(newDistance, game._id, newSpeed, acceleration, event.mod, event.timestamp);
     instant.save();
 
-    wss.broadcast(JSON.stringify({
-      timestamp: instant.timestamp.getTime(),
-      mod: instant.mod,
-      speed: instant.speed
-    }));
+    wss.broadcast(toDashboardJson(instant.timestamp.getTime(), instant.mod, instant.speed));
   });
 }
