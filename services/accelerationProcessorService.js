@@ -27,12 +27,24 @@ var calculateAcceleration = function(lastAcc, mod) {
   }
 
   return acceleration;
-}
+};
+
+var sendInfo = function(data, acceleration) {
+  var info = {
+    speed:      data.speed.toFixed(2),
+    distance:   data.distance.toFixed(2),
+    time:       data.time,
+    timestamp:  data.timestamp,
+    resting:    acceleration < 0
+  };
+  wss.broadcast(JSON.stringify(info));
+  console.log(info);
+};
 
 exports.startGame = function() {
   speed = distance = time = lastEvent = 0;
   lastAcc = [];
-}
+};
 
 // event is { timestamp, x, y, z, mod }
 exports.onEvent = function(event) {
@@ -61,9 +73,7 @@ exports.onEvent = function(event) {
   data.speed = speed;
   data.distance = distance;
   data.time = time;
-  data.resting = acceleration < 0;
 
-  wss.broadcast(JSON.stringify(data));
-  console.log(data);
+  sendInfo(data, acceleration);
   lastEvent = event.timestamp;
-}
+};
