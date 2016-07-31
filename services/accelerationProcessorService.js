@@ -23,7 +23,7 @@ var calculateAcceleration = function(lastAcc, mod) {
   } else if (acceleration > 0) {
     acceleration *= ACCELERATION_PERCENTAGE;
   } else if (acceleration == 0) {
-    acceleration = -1;
+    acceleration = -2;
   }
 
   return acceleration;
