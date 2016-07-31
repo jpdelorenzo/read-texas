@@ -1,15 +1,11 @@
 var WebSocketServer = require('ws').Server
 var wss             = new WebSocketServer({ port: 8080 });
-
-var ObjectId = require('mongoose').Schema.ObjectId;
-var Game = require('../models/game').Game;
-var Instant = require('../models/instant').Instant;
-var Game = require('../models/game').Game;
+var MathService     = require('./MathService');
 
 var DEFAULT_ACCELERATION = 0.75;
-var WIND_ACCELERATION = 1;
 var WINDOW = 15;
-var game;
+var GRAVITY = 9.81;
+var speed, kms, lastEvent, lastAcc;
 
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
@@ -17,43 +13,9 @@ wss.broadcast = function broadcast(data) {
   });
 };
 
-var avg = function(array) {
-  if (array.length == 0) {
-    return 0;
-  }
-  var sum = 0;
-  array.forEach(function(each, i) {
-    sum += each;
-  })
-  return sum / array.length;
-}
-
-var lastDeviation = function(array) {
-  var average = avg(array);
-  var sum = 0;
-  array.forEach(function(a) {
-    sum += Math.pow(a - average, 2);
-  });
-  return Math.sqrt(sum / (array.length - 1));
-}
-
-var createInstant = function(distance, game, speed, acceleration, mod, time, timestamp) {
-  var instant = new Instant();
-
-  instant.distance = distance;
-  instant.game = game;
-  instant.speed = speed;
-  instant.acceleration = acceleration;
-  instant.mod = mod;
-  instant.time = time;
-  instant.timestamp = timestamp;
-
-  return instant;
-}
-
 var sendInfo = function(instant) {
   var data = {
-    timestamp: instant.timestamp.getTime(),
+    timestamp: instant.timestamp,
     mod: instant.mod,
     acceleration: instant.acceleration,
     speed: instant.speed,
@@ -64,63 +26,54 @@ var sendInfo = function(instant) {
   return data;
 }
 
-exports.startGame = function(name) {
-  game = new Game();
-
-  game.name = name;
-  game.user = ObjectId(1);
-
-  // Persisting just the last game!
-  Instant.find({}).remove().exec();
-  Game.find({}).remove().exec();
-
-  return game.save(function(err, savedGame) {
-    game = savedGame;
-  });
+exports.startGame = function() {
+  speed = distance = time = lastEvent = 0;
+  lastAcc = [];
 }
 
 exports.onEvent = function(event) {
-  if (!game) {
-    game = exports.startGame("Game started at: " + event.timestamp);
-  } else {
-    Instant.find({ game: game._id }).sort('-date').exec(function (err, instants) {
-      var lastAvg = distance = speed = time = acceleration = 0;
-
-      if (instants.length > WINDOW) {
-        var lastInstant = instants[instants.length - 1];
-        var lastAcc = instants.slice(instants.length - WINDOW).map(function (a) { return a.mod });
-
-        distance = lastInstant.distance;
-        speed = lastInstant.speed;
-        time = lastInstant.time;
-
-        var diff = (event.timestamp - lastInstant.timestamp.getTime()) / 1000;
-        var lastAvg = avg(lastAcc);
-        var deviation = lastDeviation(lastAcc);
-
-        acceleration = lastAvg * 9.81;
-
-        if (deviation < 0.05 && event.mod) {
-          console.log('CTE')
-          acceleration = 0;
-        } else if (acceleration > 0) {
-          console.log('NORM')
-          acceleration *= DEFAULT_ACCELERATION;
-        } else if (acceleration <= 0.05) {
-          console.log('PARADO')
-          acceleration = -1;
-        }
-
-        speed += diff * acceleration;
-        speed = speed < 0 ? 0 : speed;
-        distance += diff * speed;
-        time += diff;
-      }
-
-      var instant = createInstant(distance, game._id, speed, acceleration, event.mod, time, event.timestamp);
-      instant.save();
-      var data = sendInfo(instant);
-      console.log(data);
-    });
+  console.log(event);
+  if (lastEvent == undefined) {
+    exports.startGame()
   }
+  if (lastEvent == 0) {
+    lastEvent = event.timestamp;
+    return;
+  }
+  
+  lastAcc.push(event.mod);
+  if (lastAcc.length > WINDOW) {
+    lastAcc.shift();
+  }
+
+  if (lastAcc.length < WINDOW) {
+    return;
+  }
+
+  var diff = (event.timestamp - lastEvent) / 1000;
+  var lastAvg = MathService.average(lastAcc);
+  var deviation = MathService.deviation(lastAcc);
+
+  var acceleration = lastAvg * GRAVITY;
+  if (deviation < 0.05 && event.mod) {
+    acceleration = 0;
+  } else if (acceleration > 0) {
+    acceleration *= DEFAULT_ACCELERATION;
+  } else if (acceleration == 0) {
+    acceleration = -1;
+  }
+
+  speed += diff * acceleration;
+  speed = speed < 0 ? 0 : speed;
+  distance += diff * speed;
+  time += diff;
+
+  var data = event;
+  data.speed = speed;
+  data.deviation = deviation;
+  data.distance = distance;
+  data.time = time;
+
+  sendInfo(data);
+  lastEvent = event.timestamp;
 }
