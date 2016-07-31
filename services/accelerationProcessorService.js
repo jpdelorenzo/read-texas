@@ -78,7 +78,7 @@ exports.onEvent = function(event) {
   if (!game) {
     game = exports.startGame("Game started at: " + event.timestamp);
   } else {
-    Instant.find({game: game.id}).sort('-date').exec(function (err, instants) {
+    Instant.find({game: game._id}).sort('-date').exec(function (err, instants) {
       var lastAvg = distance = speed = time = acceleration = 0;
 
       if (instants.length > WINDOW) {
@@ -97,15 +97,12 @@ exports.onEvent = function(event) {
 
         acceleration = lastAvg * 9.81;
 
-        if (deviation < 0.04 && event.mod) {
-          acceleration = -2;
-        } else {
-          if (acceleration > 0) {
-            acceleration *= DEFAULT_ACCELERATION;
-          } else if (acceleration = 0) {
-            acceleration = -0.5;
-          }
-          acceleration -= WIND_ACCELERATION;
+        if (deviation < 0.05 && event.mod) {
+          acceleration = 0;
+        } else if (acceleration > 0) {
+          acceleration *= DEFAULT_ACCELERATION;
+        } else if (acceleration <= 0.05) {
+          acceleration = -0.5;
         }
 
         speed += diff * acceleration;

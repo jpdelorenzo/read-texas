@@ -44,14 +44,14 @@ $(document).ready(function() {
           .useInteractiveGuideline(true);
       chart.xAxis
           .axisLabel('Time')
-          .tickFormat(function(d) { return d3.time.format('%M %S %L')(new Date(d)); })
-          // .tickFormat(d3.format(',r'));
+          .tickFormat(function(d) { return d3.time.format('%M %S %L')(new Date(d)); });
       chart.yAxis1
           .axisLabel('Acceleration (G)')
           .tickFormat(d3.format('.02f'));
       chart.yAxis2
           .axisLabel('Speed')
           .tickFormat(d3.format('.02f'));
+      chart.yDomain2([-1, 25]);
       d3.select('#chart svg')
           .datum(chartData)
           .transition().duration(500)
