@@ -4,6 +4,7 @@ var wss             = new WebSocketServer({ port: 8080 });
 var ObjectId = require('mongoose').Schema.ObjectId;
 var Game = require('../models/game').Game;
 var Instant = require('../models/instant').Instant;
+var Game = require('../models/game').Game;
 
 var DEFAULT_ACCELERATION = 0.75;
 var WIND_ACCELERATION = 1;
@@ -59,8 +60,8 @@ var sendInfo = function(instant) {
     distance: instant.distance,
     time: instant.time
   };
-  console.log(data);
   wss.broadcast(JSON.stringify(data));
+  return data;
 }
 
 exports.startGame = function(name) {
@@ -68,6 +69,10 @@ exports.startGame = function(name) {
 
   game.name = name;
   game.user = ObjectId(1);
+
+  // Persisting just the last game!
+  Instant.find({}).remove().exec();
+  Game.find({}).remove().exec();
 
   return game.save(function(err, savedGame) {
     game = savedGame;
@@ -96,10 +101,13 @@ exports.onEvent = function(event) {
         acceleration = lastAvg * 9.81;
 
         if (deviation < 0.05 && event.mod) {
+          console.log('CTE')
           acceleration = 0;
         } else if (acceleration > 0) {
+          console.log('NORM')
           acceleration *= DEFAULT_ACCELERATION;
         } else if (acceleration <= 0.05) {
+          console.log('PARADO')
           acceleration = -1;
         }
 
@@ -111,7 +119,8 @@ exports.onEvent = function(event) {
 
       var instant = createInstant(distance, game._id, speed, acceleration, event.mod, time, event.timestamp);
       instant.save();
-      sendInfo(instant);
+      var data = sendInfo(instant);
+      console.log(data);
     });
   }
 }
