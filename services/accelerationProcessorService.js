@@ -35,7 +35,7 @@ var sendInfo = function(data, acceleration) {
     distance:   data.distance.toFixed(2),
     time:       data.time,
     timestamp:  data.timestamp,
-    resting:    acceleration < 0
+    resting:    acceleration < 0 ? 'true' : 'false'
   };
   wss.broadcast(JSON.stringify(info));
   console.log(info);
