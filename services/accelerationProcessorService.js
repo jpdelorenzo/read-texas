@@ -78,14 +78,12 @@ exports.onEvent = function(event) {
   if (!game) {
     game = exports.startGame("Game started at: " + event.timestamp);
   } else {
-    Instant.find({game: game._id}).sort('-date').exec(function (err, instants) {
+    Instant.find({ game: game._id }).sort('-date').exec(function (err, instants) {
       var lastAvg = distance = speed = time = acceleration = 0;
 
       if (instants.length > WINDOW) {
         var lastInstant = instants[instants.length - 1];
-        var lastAcc = instants.slice(instants.length - WINDOW).map(function (a) {
-          return a.mod
-        });
+        var lastAcc = instants.slice(instants.length - WINDOW).map(function (a) { return a.mod });
 
         distance = lastInstant.distance;
         speed = lastInstant.speed;
@@ -111,7 +109,7 @@ exports.onEvent = function(event) {
         time += diff;
       }
 
-      var instant = createInstant(distance, game.id, speed, acceleration, event.mod, time, event.timestamp);
+      var instant = createInstant(distance, game._id, speed, acceleration, event.mod, time, event.timestamp);
       instant.save();
       sendInfo(instant);
     });
