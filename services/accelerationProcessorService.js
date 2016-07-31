@@ -13,19 +13,6 @@ wss.broadcast = function broadcast(data) {
   });
 };
 
-var sendInfo = function(instant) {
-  var data = {
-    timestamp: instant.timestamp,
-    mod: instant.mod,
-    acceleration: instant.acceleration,
-    speed: instant.speed,
-    distance: instant.distance,
-    time: instant.time
-  };
-  wss.broadcast(JSON.stringify(data));
-  return data;
-}
-
 var calculateAcceleration = function(lastAcc, mod) {
   var lastAvg = MathService.average(lastAcc);
   var deviation = MathService.deviation(lastAcc);
@@ -74,8 +61,9 @@ exports.onEvent = function(event) {
   data.speed = speed;
   data.distance = distance;
   data.time = time;
+  data.resting = acceleration < 0;
 
-  sendInfo(data);
+  wss.broadcast(JSON.stringify(data));
   console.log(data);
   lastEvent = event.timestamp;
 }
