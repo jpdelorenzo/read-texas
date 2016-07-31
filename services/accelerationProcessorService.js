@@ -26,16 +26,31 @@ var sendInfo = function(instant) {
   return data;
 }
 
+var calculateAcceleration = function(lastAcc, mod) {
+  var lastAvg = MathService.average(lastAcc);
+  var deviation = MathService.deviation(lastAcc);
+
+  var acceleration = lastAvg * GRAVITY;
+  if (deviation < 0.05 && mod) {
+    acceleration = 0;
+  } else if (acceleration > 0) {
+    acceleration *= DEFAULT_ACCELERATION;
+  } else if (acceleration == 0) {
+    acceleration = -1;
+  }
+
+  return acceleration;
+}
+
 exports.startGame = function() {
   speed = distance = time = lastEvent = 0;
   lastAcc = [];
 }
 
+// event is { timestamp, x, y, z, mod }
 exports.onEvent = function(event) {
-  if (lastEvent == undefined) {
-    exports.startGame()
-  }
-  if (lastEvent == 0) {
+  if (!lastEvent) {
+    exports.startGame();
     lastEvent = event.timestamp;
     return;
   }
@@ -43,24 +58,12 @@ exports.onEvent = function(event) {
   lastAcc.push(event.mod);
   if (lastAcc.length > WINDOW) {
     lastAcc.shift();
-  }
-
-  if (lastAcc.length < WINDOW) {
+  } else {
     return;
   }
 
   var diff = (event.timestamp - lastEvent) / 1000;
-  var lastAvg = MathService.average(lastAcc);
-  var deviation = MathService.deviation(lastAcc);
-
-  var acceleration = lastAvg * GRAVITY;
-  if (deviation < 0.05 && event.mod) {
-    acceleration = 0;
-  } else if (acceleration > 0) {
-    acceleration *= DEFAULT_ACCELERATION;
-  } else if (acceleration == 0) {
-    acceleration = -1;
-  }
+  var acceleration = calculateAcceleration(lastAcc, event.mod);
 
   speed += diff * acceleration;
   speed = speed < 0 ? 0 : speed;
@@ -69,7 +72,6 @@ exports.onEvent = function(event) {
 
   var data = event;
   data.speed = speed;
-  data.deviation = deviation;
   data.distance = distance;
   data.time = time;
 
