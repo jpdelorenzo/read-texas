@@ -32,7 +32,6 @@ exports.startGame = function() {
 }
 
 exports.onEvent = function(event) {
-  console.log(event);
   if (lastEvent == undefined) {
     exports.startGame()
   }
@@ -75,5 +74,6 @@ exports.onEvent = function(event) {
   data.time = time;
 
   sendInfo(data);
+  console.log(data);
   lastEvent = event.timestamp;
 }
