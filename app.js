@@ -10,6 +10,8 @@ var users = require('./routes/users');
 
 var app = express();
 
+app.use('/d3', express.static(__dirname + '/node_modules/d3/'));
+app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist/'));
 app.use('/nvd3', express.static(__dirname + '/node_modules/nvd3/build/'));
 
 require('./services/sensortagService').readTag();
