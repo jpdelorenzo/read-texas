@@ -102,7 +102,7 @@ exports.onEvent = function(event) {
         } else if (acceleration > 0) {
           acceleration *= DEFAULT_ACCELERATION;
         } else if (acceleration <= 0.05) {
-          acceleration = -0.5;
+          acceleration = -1;
         }
 
         speed += diff * acceleration;

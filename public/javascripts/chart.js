@@ -1,4 +1,5 @@
 var chart;
+var maxSpeed = 0;
 $(document).ready(function() {
   var chartData = [{
       values: [],
@@ -32,10 +33,12 @@ $(document).ready(function() {
       chartData[1].values = chartData[1].values.slice(chartData[1].values.length - 120);
       chartData[2].values = chartData[2].values.slice(chartData[2].values.length - 120);
     }
+    maxSpeed = maxSpeed < data.speed ? data.speed : maxSpeed;
     d3.select('#chart svg')
         .datum(chartData)
         .transition().duration(500)
         .call(chart);
+    chart.yDomain2([-1, maxSpeed]);
     chart.update(true);
   }
   nv.addGraph(function() {
@@ -51,7 +54,6 @@ $(document).ready(function() {
       chart.yAxis2
           .axisLabel('Speed')
           .tickFormat(d3.format('.02f'));
-      chart.yDomain2([-1, 25]);
       d3.select('#chart svg')
           .datum(chartData)
           .transition().duration(500)
