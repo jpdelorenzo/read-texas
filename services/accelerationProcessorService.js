@@ -2,7 +2,7 @@ var WebSocketServer = require('ws').Server
 var wss             = new WebSocketServer({ port: 8080 });
 var MathService     = require('./MathService');
 
-var DEFAULT_ACCELERATION = 0.75;
+var ACCELERATION_PERCENTAGE = 0.75;
 var WINDOW = 15;
 var GRAVITY = 9.81;
 var speed, kms, lastEvent, lastAcc;
@@ -34,7 +34,7 @@ var calculateAcceleration = function(lastAcc, mod) {
   if (deviation < 0.05 && mod) {
     acceleration = 0;
   } else if (acceleration > 0) {
-    acceleration *= DEFAULT_ACCELERATION;
+    acceleration *= ACCELERATION_PERCENTAGE;
   } else if (acceleration == 0) {
     acceleration = -1;
   }
