@@ -12,7 +12,6 @@ var app = express();
 
 app.use('/nvd3', express.static(__dirname + '/node_modules/nvd3/build/'));
 
-require('mongoose').connect('mongodb://localhost/hackathon');
 require('./services/sensortagService').readTag();
 
 // view engine setup
