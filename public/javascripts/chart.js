@@ -1,5 +1,5 @@
 var chart;
-var maxSpeed = 0;
+var maxAcceleration = 0;
 var GRAPH_VALUES = 100;
 
 $(document).ready(function() {
@@ -16,17 +16,17 @@ $(document).ready(function() {
     var data = JSON.parse(event.data);
     console.log(event.data);
 
-    chartData[0].values.push({ x: data.timestamp, y: data.speed });
+    chartData[0].values.push({ x: data.timestamp, y: data.accele });
     if (chartData[0].values.length > GRAPH_VALUES) {
       chartData[0].values = chartData[0].values.slice(chartData[0].values.length - GRAPH_VALUES);
     }
 
-    maxSpeed = maxSpeed < data.speed ? data.speed : maxSpeed;
+    maxAcceleration = maxAcceleration < data.accele ? data.accele : maxAcceleration;
     d3.select('#chart svg')
         .datum(chartData)
         .transition().duration(500)
         .call(chart);
-    chart.yDomain1([-1, maxSpeed]);
+    chart.yDomain1([-1, maxAcceleration]);
     chart.update(true);
     $('.resting').replaceWith('<div class="resting">Resting ' + data.resting + '</div>');
   }
@@ -39,7 +39,7 @@ $(document).ready(function() {
           .axisLabel('Time')
           .tickFormat(function(d) { return d3.time.format('%M %S %L')(new Date(d)); });
       chart.yAxis1
-          .axisLabel('Speed')
+          .axisLabel('Acceleration')
           .tickFormat(d3.format('.02f'));
       d3.select('#chart svg')
           .datum(chartData)

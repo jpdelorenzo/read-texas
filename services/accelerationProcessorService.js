@@ -35,7 +35,8 @@ var sendInfo = function(data, acceleration) {
     distance:   data.distance.toFixed(2),
     time:       data.time,
     timestamp:  data.timestamp,
-    resting:    acceleration < 0 ? 'true' : 'false'
+    resting:    acceleration < 0 ? 'true' : 'false',
+    accele:     acceleration
   };
   wss.broadcast(JSON.stringify(info));
   console.log(info);
@@ -53,7 +54,7 @@ exports.onEvent = function(event) {
     lastEvent = event.timestamp;
     return;
   }
-  
+
   lastAcc.push(event.mod);
   if (lastAcc.length > WINDOW) {
     lastAcc.shift();
